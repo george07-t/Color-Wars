@@ -7,7 +7,6 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.Toast;
 
 import android.os.Handler;
@@ -17,6 +16,7 @@ import java.util.Queue;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
+    private static final int MAX_DOT = 4;
     private ImageButton[][] imageButtons = new ImageButton[5][5];
     private int[][] cellStates = new int[5][5]; // 0 for empty, 1 for red, 2 for blue
     private int[][] colorstatus = new int[5][5];
@@ -62,7 +62,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (blues) {
             if (initialPhase2 || colorstatus[rowIndex][colIndex] == 2) {
                 // Blue player's turn
-                int dotCount = cellStates[rowIndex][colIndex] + 1; // Increment dot count
+                int dotCount = Math.min(cellStates[rowIndex][colIndex] + 1, MAX_DOT); // Increment dot count
                 int[] imageResources = imageResourcesBlue; // Choose image resources based on player color
                 imageButtons[rowIndex][colIndex].setImageResource(imageResources[dotCount - 1]); // Set the image resource based on dot count
                 cellStates[rowIndex][colIndex] = dotCount; // Update cell state
@@ -89,7 +89,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         } else if (reds) {
             if (initialPhase1 || colorstatus[rowIndex][colIndex] == 1) {
                 // Red player's turn
-                int dotCount = cellStates[rowIndex][colIndex] + 1; // Increment dot count
+                int dotCount = Math.min(cellStates[rowIndex][colIndex] + 1, MAX_DOT); // Increment dot count
                 int[] imageResources = imageResourcesRed; // Choose image resources based on player color
                 imageButtons[rowIndex][colIndex].setImageResource(imageResources[dotCount - 1]); // Set the image resource based on dot count
                 cellStates[rowIndex][colIndex] = dotCount; // Update cell state
