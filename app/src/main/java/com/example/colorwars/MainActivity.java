@@ -3,6 +3,7 @@ package com.example.colorwars;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.annotation.SuppressLint;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.View;
@@ -11,231 +12,169 @@ import android.widget.Toast;
 
 import android.os.Handler;
 
+import com.example.colorwars.classes.CellStatus;
+
 import java.util.LinkedList;
 import java.util.Queue;
+import static com.example.colorwars.classes.CellStatus.COLOR.*;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
-    private static final int MAX_DOT = 4;
-    private ImageButton[][] imageButtons = new ImageButton[5][5];
-    private int[][] cellStates = new int[5][5]; // 0 for empty, 1 for red, 2 for blue
-    private int[][] colorstatus = new int[5][5];
-    private int[] imageResourcesRed = {R.drawable.r1, R.drawable.r2, R.drawable.r3, R.drawable.r4}; // Images for red circles
-    private int[] imageResourcesBlue = {R.drawable.b1, R.drawable.b2, R.drawable.b3, R.drawable.b4}; // Images for blue circles
-    private boolean redTurn = true; // Flag to track whose turn it is (true for red, false for blue)
-    private static final long DELAY_TIME = 1000; // Delay time in milliseconds
-    private Handler handler = new Handler();
+
+    private static final int MAX_ROWS = 5;
+    private static final int MAX_COLUMNS = 5;
+    private final ImageButton[][] imageButtons = new ImageButton[5][5];
+
+    private boolean redTurn = true;
+    private boolean initialPhaseBlue = true, initialPhaseRed = true;
+
+    private static final long DELAY_TIME = 1000;
+    private final Handler handler = new Handler();
+    private final CellStatus[][] cellStates = new CellStatus[5][5];
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Initialize ImageButtons and set onClickListener
-        for (int i = 0; i < 5; i++) {
-            for (int j = 0; j < 5; j++) {
-                String buttonId = "id" + (i + 1) + (j + 1);
+        for (int row = 0; row < MAX_ROWS; row++) {
+            for (int col = 0; col < MAX_COLUMNS; col++) {
+                String buttonId = "id" + (row + 1) + (col + 1);
+                @SuppressLint("DiscouragedApi")
                 int resId = getResources().getIdentifier(buttonId, "id", getPackageName());
-                imageButtons[i][j] = findViewById(resId);
-                imageButtons[i][j].setOnClickListener(this);
-                cellStates[i][j] = 0; // Initialize all cells as empty
-                colorstatus[i][j] = 0;
+                imageButtons[row][col] = findViewById(resId);
+                imageButtons[row][col].setOnClickListener(this);
+                cellStates[row][col] = new CellStatus(row,col); // initialize with blank cell
             }
         }
     }
 
-    private boolean initialPhase1 = true;
-    private boolean initialPhase2 = true;
-    private boolean blues = false;
-    private boolean reds = true;
-
     @Override
     public void onClick(View view) {
-        // Check if the game is already over
-        if (gameOver) return;
+        if (isGameOver) return;
 
         // Get the row and column indices of the clicked ImageButton
         int[] indices = findButtonIndices(view);
         int rowIndex = indices[0];
         int colIndex = indices[1];
 
-        if (blues) {
-            if (initialPhase2 || colorstatus[rowIndex][colIndex] == 2) {
-                // Blue player's turn
-                int dotCount = Math.min(cellStates[rowIndex][colIndex] + 1, MAX_DOT); // Increment dot count
-                int[] imageResources = imageResourcesBlue; // Choose image resources based on player color
-                imageButtons[rowIndex][colIndex].setImageResource(imageResources[dotCount - 1]); // Set the image resource based on dot count
-                cellStates[rowIndex][colIndex] = dotCount; // Update cell state
-
-                // If the dot count is 4, spread again after a delay
-                if (dotCount == 4) {
-                    handler.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            spreadCircles(rowIndex, colIndex, 2);
-
-                        }
-                    }, DELAY_TIME);
-                }
-
-                // Exit the initial phase after the first move
-                initialPhase2 = false;
-                colorstatus[rowIndex][colIndex] = 2;
-            } else {
-                // Ignore click if it's not the initial phase and the clicked box doesn't contain the blue dot
-                Toast.makeText(this, "Invalid Move", Toast.LENGTH_SHORT).show();
-                return; // Exit the method early
-            }
-        } else if (reds) {
-            if (initialPhase1 || colorstatus[rowIndex][colIndex] == 1) {
-                // Red player's turn
-                int dotCount = Math.min(cellStates[rowIndex][colIndex] + 1, MAX_DOT); // Increment dot count
-                int[] imageResources = imageResourcesRed; // Choose image resources based on player color
-                imageButtons[rowIndex][colIndex].setImageResource(imageResources[dotCount - 1]); // Set the image resource based on dot count
-                cellStates[rowIndex][colIndex] = dotCount; // Update cell state
-
-                // If the dot count is 4, spread again after a delay
-                if (dotCount == 4) {
-                    handler.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            spreadCircles(rowIndex, colIndex, 1);
-
-                        }
-                    }, DELAY_TIME);
-                }
-                // Exit the initial phase after the first move
-                initialPhase1 = false;
-                colorstatus[rowIndex][colIndex] = 1;
-            } else {
-                // Ignore click if it's not the initial phase and the clicked box doesn't contain the red dot
-                Toast.makeText(this, "Invalid Move", Toast.LENGTH_SHORT).show();
-                return; // Exit the method early
-            }
+        if( rowIndex == -1 || colIndex == -1 ){
+            showToast("Invalid cell clicked");
+            return;
         }
 
-        // Switch turns to the other player
-        blues = !blues;
-        reds = !reds;
+        final CellStatus clickedCell = cellStates[rowIndex][colIndex];
 
+        if( !initialPhaseBlue && !initialPhaseRed && clickedCell.isBlank()){
+            showToast("Can't click on empty cell");
+            return;
+        }
 
+        if( initialPhaseRed ){
+            clickedCell.setColor(RED);
+            initialPhaseRed = false;
+        }
+        else if( initialPhaseBlue ){
+            if(!clickedCell.isBlank()){
+                showToast("Invalid move");
+                return;
+            }
+            clickedCell.setColor(BLUE);
+            initialPhaseBlue = false;
+        }
+        else if( !clickedCell.canClick(redTurn) ){
+            showToast("Invalid move");
+            return;
+        }
+
+        clickedCell.increaseDot();
+        imageButtons[rowIndex][colIndex].setImageResource(clickedCell.getImage());
+
+        if (clickedCell.shouldSpread()) {
+            handler.postDelayed(() -> {
+                spreadCell(clickedCell);
+            }, DELAY_TIME);
+            //imageButtons[rowIndex][colIndex].setImageResource( clickedCell.makeBlankAndGetImage() );
+        }
+
+        redTurn = !redTurn;
     }
 
     private int[] findButtonIndices(View view) {
-        int[] indices = {-1, -1};
-        // Get the row and column indices of the clicked ImageButton
-        for (int i = 0; i < 5; i++) {
-            for (int j = 0; j < 5; j++) {
-                if (view == imageButtons[i][j]) {
-                    indices[0] = i;
-                    indices[1] = j;
-                    return indices;
+        for (int r = 0; r < MAX_ROWS; r++) {
+            for (int c = 0; c < MAX_COLUMNS; c++) {
+                if (view == imageButtons[r][c]) {
+                    return new int[]{r,c};
                 }
             }
         }
-        return indices;
+        return new int[]{-1,-1};
     }
 
-    private Queue<int[]> spreadQueue = new LinkedList<>(); // Queue to hold positions for spreading
+    private final Queue<CellStatus> cellsToSpreadQueue = new LinkedList<>();
 
-    private void spreadCircles(int rowIndex, int colIndex, int col) {
-        // Define offsets for adjacent boxes (up, down, left, right)
-        int[][] offsets = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+    private void spreadCell(CellStatus rootCell) {
+        final int[][] offsets = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
 
-        // Add the current position to the spread queue
-        spreadQueue.offer(new int[]{rowIndex, colIndex});
+        cellsToSpreadQueue.offer( rootCell );
+        CellStatus.COLOR rootColor = rootCell.getColor();
 
-        // Process the spread queue sequentially
-        while (!spreadQueue.isEmpty()) {
-            int[] position = spreadQueue.poll();
-            int rows = position[0];
-            int cols = position[1];
+        while( !cellsToSpreadQueue.isEmpty() ) {
 
-            // Spread to adjacent boxes
+            CellStatus currentCell = cellsToSpreadQueue.poll();
+            if(currentCell == null) continue;
+
+
             for (int[] offset : offsets) {
-                int newRow = rows + offset[0];
-                int newCol = cols + offset[1];
 
-                // Check if the new position is within bounds
-                if (newRow >= 0 && newRow < 5 && newCol >= 0 && newCol < 5 && cellStates[newRow][newCol] != 4) {
-                    if (col == 1) {
-                        colorstatus[newRow][newCol] = 1;
-                        // Increment the dot count of the adjacent box and update the image
-                        cellStates[newRow][newCol] = (cellStates[newRow][newCol] + 1) % 5; // Increment dot count and ensure it stays within 1 to 4
-                        int dotCount = cellStates[newRow][newCol] - 1; // Calculate dot count within valid range
-                        imageButtons[newRow][newCol].setImageResource(imageResourcesRed[dotCount]);
-                        // If the dot count of the adjacent box is 4, add it to the spread queue
-                        if (dotCount == 3) {
-                            spreadQueue.offer(new int[]{newRow, newCol});
-                        }
-                    } else if (col == 2) {
-                        colorstatus[newRow][newCol] = 2;
-                        // Increment the dot count of the adjacent box and update the image
-                        cellStates[newRow][newCol] = (cellStates[newRow][newCol] + 1) % 5; // Increment dot count and ensure it stays within 1 to 4
-                        int dotCount = cellStates[newRow][newCol] - 1; // Calculate dot count within valid range
-                        imageButtons[newRow][newCol].setImageResource(imageResourcesBlue[dotCount]);
-                        // If the dot count of the adjacent box is 4, add it to the spread queue
-                        if (dotCount == 3) {
-                            spreadQueue.offer(new int[]{newRow, newCol});
-                        }
-                    }
+                int row = currentCell.rowIndex + offset[0];
+                int col = currentCell.colIndex + offset[1];
+
+                if( row < 0 || row >= MAX_ROWS || col < 0 || col >= MAX_COLUMNS) continue;
+
+                CellStatus adjCell = cellStates[row][col];
+
+                adjCell.setColor(rootColor);
+                adjCell.increaseDot();
+                imageButtons[adjCell.rowIndex][adjCell.colIndex].setImageResource(adjCell.getImage());
+
+                if(adjCell.shouldSpread()){
+                    cellsToSpreadQueue.offer(adjCell);
                 }
             }
+            // make current cell blank
+            imageButtons[currentCell.rowIndex][currentCell.colIndex].setImageResource(currentCell.makeBlankAndGetImage());
         }
 
-        // After spreading is completed, remove the image of the box that has been spreaded
-        imageButtons[rowIndex][colIndex].setImageResource(R.drawable.box1); // Remove the image
-        cellStates[rowIndex][colIndex] = 0; // Update cell state
-        colorstatus[rowIndex][colIndex] = 0; // Update colorstatus
-
-        // Check for any remaining adjacent boxes with 4 dots and remove their images
-        for (int[] offset : offsets) {
-            int newRow = rowIndex + offset[0];
-            int newCol = colIndex + offset[1];
-            if (newRow >= 0 && newRow < 5 && newCol >= 0 && newCol < 5 && cellStates[newRow][newCol] == 4) {
-                imageButtons[newRow][newCol].setImageResource(R.drawable.box1); // Remove the image
-                cellStates[newRow][newCol] = 0; // Update cell state
-                colorstatus[newRow][newCol] = 0; // Update colorstatus
-            }
+        CellStatus.COLOR winner = getWinner();
+        isGameOver = (winner != NONE);
+        if(isGameOver){
+            showWinnerDialog( (winner == RED) ? "RED" : "BLUE");
         }
-
-        // Check for winner after spreading is completed and 4-dot circles are removed
-        checkWinner();
     }
 
+    private Toast mToast = null;
+    private void showToast(String message){
+        try{
+            if(mToast != null) mToast.cancel();
+            mToast = Toast.makeText(this,message,Toast.LENGTH_SHORT);
+            mToast.show();
+        }catch (Exception ignored){}
+    }
 
-
-
-    private boolean gameOver = false;
-
-    private boolean checkWinner() {
-
-        int r = 0;
-        int b = 0;
-        // Check if there are any red or blue circles left on the board
-        for (int i = 0; i < 5; i++) {
-            for (int j = 0; j < 5; j++) {
-                if (colorstatus[i][j] == 1) {
-
-                    r++;
-                } else if (colorstatus[i][j] == 2) {
-
-                    b++;
-                }
+    private boolean isGameOver = false;
+    private CellStatus.COLOR getWinner() {
+        int redCount = 0, blueCount = 0;
+        for(CellStatus[] rows : cellStates){
+            for(CellStatus cell : rows){
+                if(cell.getColor() == RED) redCount++;
+                else if(cell.getColor() == BLUE) blueCount++;
             }
         }
-        // Toast.makeText(this, "red=" + r + " blue=" + b, Toast.LENGTH_SHORT).show();
-        // Display the winner if one of the players has no circles left
-        if (r == 0) {
-            gameOver = true;
-            showWinnerDialog("Blue");
-            return true;
-        } else if (b == 0) {
-            gameOver = true;
-            showWinnerDialog("Red");
-            return true;
-        }
-        return false;
+
+        if (redCount == 0) return BLUE;
+        if (blueCount == 0) return RED;
+        return NONE;
     }
 
     private void showWinnerDialog(String winner) {
@@ -245,34 +184,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         builder.setPositiveButton("Restart", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                gameOver = false;
-                initialPhase1 = true;
-                initialPhase2 = true;
-                blues = false;
-                reds = true;
+                isGameOver = false;
+                initialPhaseBlue = true;
+                initialPhaseRed = true;
+                redTurn = true;
 
-                // Clear all circles from the board
-                for (int i = 0; i < 5; i++) {
-                    for (int j = 0; j < 5; j++) {
-                        imageButtons[i][j].setImageResource(R.drawable.box1);
-                        cellStates[i][j] = 0;
-                        colorstatus[i][j] = 0;
+                for (int r = 0; r < MAX_ROWS; r++) {
+                    for (int c = 0; c < MAX_COLUMNS; c++) {
+                        imageButtons[r][c].setImageResource( cellStates[r][c].makeBlankAndGetImage() );
                     }
                 }
                 dialog.dismiss();
             }
         });
 
-
-        builder.setNegativeButton("Quit", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.dismiss(); // Dismiss the dialog if the player chooses to quit
-            }
-        });
-        builder.setCancelable(false); // Prevent dismissing the dialog by tapping outside
+        builder.setNegativeButton("Quit", (dialog, which) -> { dialog.dismiss();});
+        builder.setCancelable(false);
         builder.show();
     }
-
 
 }
