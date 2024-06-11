@@ -7,7 +7,10 @@ import android.annotation.SuppressLint;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import android.os.Handler;
@@ -16,6 +19,7 @@ import com.example.colorwars.classes.CellStatus;
 
 import java.util.LinkedList;
 import java.util.Queue;
+
 import static com.example.colorwars.classes.CellStatus.COLOR.*;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
@@ -31,12 +35,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private static final long DELAY_TIME = 1000;
     private final Handler handler = new Handler();
     private final CellStatus[][] cellStates = new CellStatus[5][5];
-
+    private TextView rd, be;
+    int redCount = 0, blueCount = 0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Window window = this.getWindow();
+        window.setStatusBarColor(this.getResources().getColor(R.color.main));
         setContentView(R.layout.activity_main);
-
+        setContentView(R.layout.activity_main);
+        rd = findViewById(R.id.redid);
+        be = findViewById(R.id.blueid);
         for (int row = 0; row < MAX_ROWS; row++) {
             for (int col = 0; col < MAX_COLUMNS; col++) {
                 String buttonId = "id" + (row + 1) + (col + 1);
@@ -44,7 +53,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 int resId = getResources().getIdentifier(buttonId, "id", getPackageName());
                 imageButtons[row][col] = findViewById(resId);
                 imageButtons[row][col].setOnClickListener(this);
-                cellStates[row][col] = new CellStatus(row,col); // initialize with blank cell
+                cellStates[row][col] = new CellStatus(row, col); // initialize with blank cell
             }
         }
     }
@@ -52,37 +61,38 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onClick(View view) {
         if (isGameOver) return;
-
         // Get the row and column indices of the clicked ImageButton
         int[] indices = findButtonIndices(view);
         int rowIndex = indices[0];
         int colIndex = indices[1];
 
-        if( rowIndex == -1 || colIndex == -1 ){
+        if (rowIndex == -1 || colIndex == -1) {
             showToast("Invalid cell clicked");
             return;
         }
 
         final CellStatus clickedCell = cellStates[rowIndex][colIndex];
 
-        if( !initialPhaseBlue && !initialPhaseRed && clickedCell.isBlank()){
+        if (!initialPhaseBlue && !initialPhaseRed && clickedCell.isBlank()) {
             showToast("Can't click on empty cell");
             return;
         }
 
-        if( initialPhaseRed ){
+        if (initialPhaseRed) {
             clickedCell.setColor(RED);
+            redCount++;
+            rd.setText(String.valueOf(redCount));
             initialPhaseRed = false;
-        }
-        else if( initialPhaseBlue ){
-            if(!clickedCell.isBlank()){
+        } else if (initialPhaseBlue) {
+            if (!clickedCell.isBlank()) {
                 showToast("Invalid move");
                 return;
             }
             clickedCell.setColor(BLUE);
+            blueCount++;
+            be.setText(String.valueOf(blueCount));
             initialPhaseBlue = false;
-        }
-        else if( !clickedCell.canClick(redTurn) ){
+        } else if (!clickedCell.canClick(redTurn)) {
             showToast("Invalid move");
             return;
         }
@@ -104,11 +114,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         for (int r = 0; r < MAX_ROWS; r++) {
             for (int c = 0; c < MAX_COLUMNS; c++) {
                 if (view == imageButtons[r][c]) {
-                    return new int[]{r,c};
+                    return new int[]{r, c};
                 }
             }
         }
-        return new int[]{-1,-1};
+        return new int[]{-1, -1};
     }
 
     private final Queue<CellStatus> cellsToSpreadQueue = new LinkedList<>();
@@ -116,13 +126,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void spreadCell(CellStatus rootCell) {
         final int[][] offsets = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
 
-        cellsToSpreadQueue.offer( rootCell );
+        cellsToSpreadQueue.offer(rootCell);
         CellStatus.COLOR rootColor = rootCell.getColor();
 
-        while( !cellsToSpreadQueue.isEmpty() ) {
+        while (!cellsToSpreadQueue.isEmpty()) {
 
             CellStatus currentCell = cellsToSpreadQueue.poll();
-            if(currentCell == null) continue;
+            if (currentCell == null) continue;
 
 
             for (int[] offset : offsets) {
@@ -130,7 +140,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 int row = currentCell.rowIndex + offset[0];
                 int col = currentCell.colIndex + offset[1];
 
-                if( row < 0 || row >= MAX_ROWS || col < 0 || col >= MAX_COLUMNS) continue;
+                if (row < 0 || row >= MAX_ROWS || col < 0 || col >= MAX_COLUMNS) continue;
 
                 CellStatus adjCell = cellStates[row][col];
 
@@ -138,7 +148,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 adjCell.increaseDot();
                 imageButtons[adjCell.rowIndex][adjCell.colIndex].setImageResource(adjCell.getImage());
 
-                if(adjCell.shouldSpread()){
+                if (adjCell.shouldSpread()) {
                     cellsToSpreadQueue.offer(adjCell);
                 }
             }
@@ -148,30 +158,34 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         CellStatus.COLOR winner = getWinner();
         isGameOver = (winner != NONE);
-        if(isGameOver){
-            showWinnerDialog( (winner == RED) ? "RED" : "BLUE");
+        if (isGameOver) {
+            showWinnerDialog((winner == RED) ? "RED" : "BLUE");
         }
     }
 
     private Toast mToast = null;
-    private void showToast(String message){
-        try{
-            if(mToast != null) mToast.cancel();
-            mToast = Toast.makeText(this,message,Toast.LENGTH_SHORT);
+
+    private void showToast(String message) {
+        try {
+            if (mToast != null) mToast.cancel();
+            mToast = Toast.makeText(this, message, Toast.LENGTH_SHORT);
             mToast.show();
-        }catch (Exception ignored){}
+        } catch (Exception ignored) {
+        }
     }
 
     private boolean isGameOver = false;
+
     private CellStatus.COLOR getWinner() {
-        int redCount = 0, blueCount = 0;
-        for(CellStatus[] rows : cellStates){
-            for(CellStatus cell : rows){
-                if(cell.getColor() == RED) redCount++;
-                else if(cell.getColor() == BLUE) blueCount++;
+        redCount = 0; blueCount = 0;
+        for (CellStatus[] rows : cellStates) {
+            for (CellStatus cell : rows) {
+                if (cell.getColor() == RED) redCount++;
+                else if (cell.getColor() == BLUE) blueCount++;
             }
         }
-
+        rd.setText(String.valueOf(redCount));
+       be.setText(String.valueOf(blueCount));
         if (redCount == 0) return BLUE;
         if (blueCount == 0) return RED;
         return NONE;
@@ -188,17 +202,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 initialPhaseBlue = true;
                 initialPhaseRed = true;
                 redTurn = true;
-
+                redCount=0;
+                blueCount=0;
+                rd.setText(String.valueOf(redCount));
+                be.setText(String.valueOf(blueCount));
                 for (int r = 0; r < MAX_ROWS; r++) {
                     for (int c = 0; c < MAX_COLUMNS; c++) {
-                        imageButtons[r][c].setImageResource( cellStates[r][c].makeBlankAndGetImage() );
+                        imageButtons[r][c].setImageResource(cellStates[r][c].makeBlankAndGetImage());
                     }
                 }
                 dialog.dismiss();
             }
         });
 
-        builder.setNegativeButton("Quit", (dialog, which) -> { dialog.dismiss();});
+        builder.setNegativeButton("Quit", (dialog, which) -> {
+            dialog.dismiss();
+
+        });
         builder.setCancelable(false);
         builder.show();
     }

@@ -7,12 +7,29 @@
     android:background="#343e56"
     tools:context=".MainActivity">
 
-   <LinearLayout
+    <TextView
+        android:id="@+id/blueid"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:gravity="center"
+        android:layout_gravity="top|end"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="10dp"
+        android:text="0"
+        android:textColor="#ffffff"
+        android:textSize="40dp"
+        android:textStyle="bold"
+        android:background="@drawable/circleblue"
+        android:padding="16dp"
+        android:maxLength="2" />
+
+
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-       android:padding="5dp"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:padding="5dp">
 
         <!-- First Row -->
         <LinearLayout
@@ -22,34 +39,37 @@
 
             <ImageView
 
-                android:layout_margin="5dp"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:layout_margin="5dp"
                 android:src="@drawable/box1" />
 
             <ImageView
 
-                android:layout_margin="5dp"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:layout_margin="5dp"
                 android:src="@drawable/box1" />
+
             <ImageView
 
-                android:layout_margin="5dp"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:layout_margin="5dp"
                 android:src="@drawable/box1" />
+
             <ImageView
 
-                android:layout_margin="5dp"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:layout_margin="5dp"
                 android:src="@drawable/box1" />
+
             <ImageView
 
-                android:layout_margin="5dp"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:layout_margin="5dp"
                 android:src="@drawable/box1" />
         </LinearLayout>
 
@@ -61,33 +81,37 @@
 
             <ImageView
 
-                android:layout_margin="5dp"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:layout_margin="5dp"
                 android:src="@drawable/box1" />
+
             <ImageView
 
-                android:layout_margin="5dp"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:layout_margin="5dp"
                 android:src="@drawable/box1" />
+
             <ImageView
 
-                android:layout_margin="5dp"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:layout_margin="5dp"
                 android:src="@drawable/box1" />
+
             <ImageView
 
-                android:layout_margin="5dp"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:layout_margin="5dp"
                 android:src="@drawable/box1" />
+
             <ImageView
 
-                android:layout_margin="5dp"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:layout_margin="5dp"
                 android:src="@drawable/box1" />
         </LinearLayout>
 
@@ -99,35 +123,40 @@
 
             <ImageView
 
-                android:layout_margin="5dp"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:layout_margin="5dp"
                 android:src="@drawable/box1" />
+
             <ImageView
 
-                android:layout_margin="5dp"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:layout_margin="5dp"
                 android:src="@drawable/box1" />
+
             <ImageView
 
-                android:layout_margin="5dp"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:layout_margin="5dp"
                 android:src="@drawable/box1" />
+
             <ImageView
 
-                android:layout_margin="5dp"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:layout_margin="5dp"
                 android:src="@drawable/box1" />
+
             <ImageView
 
-                android:layout_margin="5dp"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:layout_margin="5dp"
                 android:src="@drawable/box1" />
         </LinearLayout>
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -135,35 +164,40 @@
 
             <ImageView
 
-                android:layout_margin="5dp"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:layout_margin="5dp"
                 android:src="@drawable/box1" />
+
             <ImageView
 
-                android:layout_margin="5dp"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:layout_margin="5dp"
                 android:src="@drawable/box1" />
+
             <ImageView
 
-                android:layout_margin="5dp"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:layout_margin="5dp"
                 android:src="@drawable/box1" />
+
             <ImageView
 
-                android:layout_margin="5dp"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:layout_margin="5dp"
                 android:src="@drawable/box1" />
+
             <ImageView
 
-                android:layout_margin="5dp"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:layout_margin="5dp"
                 android:src="@drawable/box1" />
         </LinearLayout>
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -171,42 +205,47 @@
 
             <ImageView
 
-                android:layout_margin="5dp"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:layout_margin="5dp"
                 android:src="@drawable/box1" />
+
             <ImageView
 
-                android:layout_margin="5dp"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:layout_margin="5dp"
                 android:src="@drawable/box1" />
+
             <ImageView
 
-                android:layout_margin="5dp"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:layout_margin="5dp"
                 android:src="@drawable/box1" />
+
             <ImageView
 
-                android:layout_margin="5dp"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:layout_margin="5dp"
                 android:src="@drawable/box1" />
+
             <ImageView
 
-                android:layout_margin="5dp"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:layout_margin="5dp"
                 android:src="@drawable/box1" />
         </LinearLayout>
     </LinearLayout>
+
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:padding="5dp"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:padding="5dp">
 
         <!-- First Row -->
         <LinearLayout
@@ -216,37 +255,37 @@
 
             <ImageButton
                 android:id="@+id/id11"
-                android:layout_margin="5dp"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:layout_margin="5dp"
                 android:src="@drawable/box1" />
 
             <ImageButton
                 android:id="@+id/id12"
-                android:layout_margin="5dp"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:layout_margin="5dp"
                 android:src="@drawable/box1" />
 
             <ImageButton
                 android:id="@+id/id13"
-                android:layout_margin="5dp"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:layout_margin="5dp"
                 android:src="@drawable/box1" />
 
             <ImageButton
                 android:id="@+id/id14"
-                android:layout_margin="5dp"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:layout_margin="5dp"
                 android:src="@drawable/box1" />
 
             <ImageButton
                 android:id="@+id/id15"
-                android:layout_margin="5dp"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:layout_margin="5dp"
                 android:src="@drawable/box1" />
         </LinearLayout>
 
@@ -258,37 +297,37 @@
 
             <ImageButton
                 android:id="@+id/id21"
-                android:layout_margin="5dp"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:layout_margin="5dp"
                 android:src="@drawable/box1" />
 
             <ImageButton
                 android:id="@+id/id22"
-                android:layout_margin="5dp"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:layout_margin="5dp"
                 android:src="@drawable/box1" />
 
             <ImageButton
                 android:id="@+id/id23"
-                android:layout_margin="5dp"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:layout_margin="5dp"
                 android:src="@drawable/box1" />
 
             <ImageButton
                 android:id="@+id/id24"
-                android:layout_margin="5dp"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:layout_margin="5dp"
                 android:src="@drawable/box1" />
 
             <ImageButton
                 android:id="@+id/id25"
-                android:layout_margin="5dp"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:layout_margin="5dp"
                 android:src="@drawable/box1" />
         </LinearLayout>
 
@@ -300,39 +339,40 @@
 
             <ImageButton
                 android:id="@+id/id31"
-                android:layout_margin="5dp"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:layout_margin="5dp"
                 android:src="@drawable/box1" />
 
             <ImageButton
                 android:id="@+id/id32"
-                android:layout_margin="5dp"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:layout_margin="5dp"
                 android:src="@drawable/box1" />
 
             <ImageButton
                 android:id="@+id/id33"
-                android:layout_margin="5dp"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:layout_margin="5dp"
                 android:src="@drawable/box1" />
 
             <ImageButton
                 android:id="@+id/id34"
-                android:layout_margin="5dp"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:layout_margin="5dp"
                 android:src="@drawable/box1" />
 
             <ImageButton
                 android:id="@+id/id35"
-                android:layout_margin="5dp"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:layout_margin="5dp"
                 android:src="@drawable/box1" />
         </LinearLayout>
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -340,39 +380,40 @@
 
             <ImageButton
                 android:id="@+id/id41"
-                android:layout_margin="5dp"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:layout_margin="5dp"
                 android:src="@drawable/box1" />
 
             <ImageButton
                 android:id="@+id/id42"
-                android:layout_margin="5dp"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:layout_margin="5dp"
                 android:src="@drawable/box1" />
 
             <ImageButton
                 android:id="@+id/id43"
-                android:layout_margin="5dp"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:layout_margin="5dp"
                 android:src="@drawable/box1" />
 
             <ImageButton
                 android:id="@+id/id44"
-                android:layout_margin="5dp"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:layout_margin="5dp"
                 android:src="@drawable/box1" />
 
             <ImageButton
                 android:id="@+id/id45"
-                android:layout_margin="5dp"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:layout_margin="5dp"
                 android:src="@drawable/box1" />
         </LinearLayout>
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -380,38 +421,55 @@
 
             <ImageButton
                 android:id="@+id/id51"
-                android:layout_margin="5dp"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:layout_margin="5dp"
                 android:src="@drawable/box1" />
 
             <ImageButton
                 android:id="@+id/id52"
-                android:layout_margin="5dp"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:layout_margin="5dp"
                 android:src="@drawable/box1" />
 
             <ImageButton
                 android:id="@+id/id53"
-                android:layout_margin="5dp"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:layout_margin="5dp"
                 android:src="@drawable/box1" />
 
             <ImageButton
                 android:id="@+id/id54"
-                android:layout_margin="5dp"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:layout_margin="5dp"
                 android:src="@drawable/box1" />
 
             <ImageButton
                 android:id="@+id/id55"
-                android:layout_margin="5dp"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:layout_margin="5dp"
                 android:src="@drawable/box1" />
         </LinearLayout>
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/redid"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:gravity="center"
+        android:layout_gravity="bottom|start"
+        android:layout_marginBottom="10dp"
+        android:layout_marginStart="10dp"
+        android:text="0"
+        android:textColor="#ffffff"
+        android:textSize="40dp"
+        android:textStyle="bold"
+        android:background="@drawable/circle"
+        android:padding="16dp"
+        android:maxLength="2" />
+
 </FrameLayout>
