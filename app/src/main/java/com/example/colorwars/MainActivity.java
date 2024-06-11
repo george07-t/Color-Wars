@@ -1,5 +1,4 @@
 package com.example.colorwars;
-
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -19,11 +18,11 @@ import com.example.colorwars.classes.CellStatus;
 
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.Random;
 
 import static com.example.colorwars.classes.CellStatus.COLOR.*;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
-
 
     private static final int MAX_ROWS = 5;
     private static final int MAX_COLUMNS = 5;
@@ -37,6 +36,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private final CellStatus[][] cellStates = new CellStatus[5][5];
     private TextView rd, be;
     int redCount = 0, blueCount = 0;
+    private final Random random = new Random();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -104,10 +105,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             handler.postDelayed(() -> {
                 spreadCell(clickedCell);
             }, DELAY_TIME);
-            //imageButtons[rowIndex][colIndex].setImageResource( clickedCell.makeBlankAndGetImage() );
         }
 
         redTurn = !redTurn;
+        if (!redTurn) {
+            handler.postDelayed(this::botMove, DELAY_TIME);
+        }
     }
 
     private int[] findButtonIndices(View view) {
@@ -130,13 +133,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         CellStatus.COLOR rootColor = rootCell.getColor();
 
         while (!cellsToSpreadQueue.isEmpty()) {
-
             CellStatus currentCell = cellsToSpreadQueue.poll();
             if (currentCell == null) continue;
 
-
             for (int[] offset : offsets) {
-
                 int row = currentCell.rowIndex + offset[0];
                 int col = currentCell.colIndex + offset[1];
 
@@ -177,7 +177,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private boolean isGameOver = false;
 
     private CellStatus.COLOR getWinner() {
-        redCount = 0; blueCount = 0;
+        redCount = 0;
+        blueCount = 0;
         for (CellStatus[] rows : cellStates) {
             for (CellStatus cell : rows) {
                 if (cell.getColor() == RED) redCount++;
@@ -185,7 +186,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         }
         rd.setText(String.valueOf(redCount));
-       be.setText(String.valueOf(blueCount));
+        be.setText(String.valueOf(blueCount));
         if (redCount == 0) return BLUE;
         if (blueCount == 0) return RED;
         return NONE;
@@ -202,8 +203,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 initialPhaseBlue = true;
                 initialPhaseRed = true;
                 redTurn = true;
-                redCount=0;
-                blueCount=0;
+                redCount = 0;
+                blueCount = 0;
                 rd.setText(String.valueOf(redCount));
                 be.setText(String.valueOf(blueCount));
                 for (int r = 0; r < MAX_ROWS; r++) {
@@ -222,5 +223,49 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         builder.setCancelable(false);
         builder.show();
     }
+
+    private void botMove() {
+        if (isGameOver) return;
+
+        int rowIndex, colIndex;
+        if (initialPhaseBlue) {
+            // First move: Select any non-red cell
+            do {
+                rowIndex = random.nextInt(MAX_ROWS);
+                colIndex = random.nextInt(MAX_COLUMNS);
+            } while (cellStates[rowIndex][colIndex].getColor() == RED);
+
+            CellStatus clickedCell = cellStates[rowIndex][colIndex];
+            clickedCell.setColor(BLUE);
+            clickedCell.increaseDot();
+            blueCount++;
+            be.setText(String.valueOf(blueCount));
+            imageButtons[rowIndex][colIndex].setImageResource(clickedCell.getImage());
+            initialPhaseBlue = false;
+        } else {
+            // Subsequent moves: Select only blue cells
+            boolean validMoveFound = false;
+            do {
+                rowIndex = random.nextInt(MAX_ROWS);
+                colIndex = random.nextInt(MAX_COLUMNS);
+                CellStatus clickedCell = cellStates[rowIndex][colIndex];
+                if (clickedCell.getColor() == BLUE && clickedCell.canClick(false)) {
+                    validMoveFound = true;
+                    clickedCell.increaseDot();
+                    imageButtons[rowIndex][colIndex].setImageResource(clickedCell.getImage());
+
+                    if (clickedCell.shouldSpread()) {
+                        handler.postDelayed(() -> {
+                            spreadCell(clickedCell);
+                        }, DELAY_TIME);
+                    }
+                }
+            } while (!validMoveFound);
+        }
+
+        redTurn = !redTurn;
+    }
+
+
 
 }
