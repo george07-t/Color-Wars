@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.annotation.SuppressLint;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.os.Looper;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -21,6 +22,9 @@ import com.example.colorwars.classes.CellStatus;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Random;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import static com.example.colorwars.classes.CellStatus.COLOR.*;
 
@@ -230,73 +234,89 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         builder.show();
     }
 
+    private final ExecutorService service = Executors.newSingleThreadExecutor();
+    private final Handler mHandler = new Handler(Looper.getMainLooper());
     private void botMove() {
-        if (isGameOver) return;
+        service.submit(() -> {
+            if (isGameOver) return;
 
-        int rowIndex, colIndex;
-        if (initialPhaseBlue) {
-            // First move: Select any non-red cell
-            do {
-                rowIndex = random.nextInt(MAX_ROWS);
-                colIndex = random.nextInt(MAX_COLUMNS);
-            } while (cellStates[rowIndex][colIndex].getColor() == RED);
+            if (initialPhaseBlue) {
+                // First move: Select any non-red cell
+                final int[] rowIndex = new int[1], colIndex = new int[1];
+                do {
+                    rowIndex[0] = random.nextInt(MAX_ROWS);
+                    colIndex[0] = random.nextInt(MAX_COLUMNS);
+                } while (cellStates[rowIndex[0]][colIndex[0]].getColor() == RED);
 
-            CellStatus clickedCell = cellStates[rowIndex][colIndex];
-            clickedCell.setColor(BLUE);
-            clickedCell.increaseDot();
-            blueCount++;
-            be.setText(String.valueOf(blueCount));
-            imageButtons[rowIndex][colIndex].setImageResource(clickedCell.getImage());
-            initialPhaseBlue = false;
-        } else {
-            // Subsequent moves: Select only blue cells
-            boolean validMoveFound = false;
-            do {
-                CellStatus[][] field = new CellStatus[MAX_ROWS][MAX_COLUMNS];
-                for (int i = 0; i < MAX_ROWS; i++) {
-                    for (int j = 0; j < MAX_COLUMNS; j++) {
-                        field[i][j] = cellStates[i][j];
-                    }
-                }
-                Pair<Integer, Integer> bestMove = alphaBetaApplier.getBestMove(field, true);
-                if (bestMove != null) {
-                    rowIndex = bestMove.getFirst();
-                    colIndex = bestMove.getSecond();
-                    CellStatus clickedCell = cellStates[rowIndex][colIndex];
-                    if (clickedCell.getColor() == BLUE && clickedCell.canClick(false)) {
-                        validMoveFound = true;
-                        clickedCell.increaseDot();
-                        imageButtons[rowIndex][colIndex].setImageResource(clickedCell.getImage());
-
-                        if (clickedCell.shouldSpread()) {
-                            handler.postDelayed(() -> {
-                                spreadCell(clickedCell);
-                            }, DELAY_TIME);
+                CellStatus clickedCell = cellStates[rowIndex[0]][colIndex[0]];
+                clickedCell.setColor(BLUE);
+                clickedCell.increaseDot();
+                blueCount++;
+                mHandler.post(() -> {
+                    be.setText(String.valueOf(blueCount));
+                    imageButtons[rowIndex[0]][colIndex[0]].setImageResource(clickedCell.getImage());
+                });
+                initialPhaseBlue = false;
+            } else {
+                // Subsequent moves: Select only blue cells
+                boolean validMoveFound = false;
+                do {
+                    CellStatus[][] field = new CellStatus[MAX_ROWS][MAX_COLUMNS];
+                    for (int i = 0; i < MAX_ROWS; i++) {
+                        for (int j = 0; j < MAX_COLUMNS; j++) {
+                            field[i][j] = cellStates[i][j];
                         }
                     }
-                } else {
-                    Toast.makeText(this, "Random", Toast.LENGTH_SHORT).show();
-                    rowIndex = random.nextInt(MAX_ROWS);
-                    colIndex = random.nextInt(MAX_COLUMNS);
+                    Pair<Integer, Integer> bestMove = alphaBetaApplier.getBestMove(field, true);
+                    if (bestMove != null) {
+                        final int rowIndex = bestMove.getFirst();
+                        final int colIndex = bestMove.getSecond();
+                        CellStatus clickedCell = cellStates[rowIndex][colIndex];
+                        if (clickedCell.getColor() == BLUE && clickedCell.canClick(false)) {
+                            validMoveFound = true;
+                            clickedCell.increaseDot();
 
-                    CellStatus clickedCell = cellStates[rowIndex][colIndex];
-                    if (clickedCell.getColor() == BLUE && clickedCell.canClick(false)) {
-                        validMoveFound = true;
-                        clickedCell.increaseDot();
-                        imageButtons[rowIndex][colIndex].setImageResource(clickedCell.getImage());
+                            System.out.println("Using bot move");
 
-                        if (clickedCell.shouldSpread()) {
-                            handler.postDelayed(() -> {
-                                spreadCell(clickedCell);
-                            }, DELAY_TIME);
+                            mHandler.post(() -> {
+                                imageButtons[rowIndex][colIndex].setImageResource(clickedCell.getImage());
+                            });
+
+                            if (clickedCell.shouldSpread()) {
+                                handler.postDelayed(() -> {
+                                    spreadCell(clickedCell);
+                                }, DELAY_TIME);
+                            }
                         }
                     }
-                }
-            } while (!validMoveFound);
-        }
+                    else {
+                        Toast.makeText(this, "Random", Toast.LENGTH_SHORT).show();
+                        final int rowIndex = random.nextInt(MAX_ROWS);
+                        final int colIndex = random.nextInt(MAX_COLUMNS);
 
-        redTurn = !redTurn;
+                        CellStatus clickedCell = cellStates[rowIndex][colIndex];
+                        if (clickedCell.getColor() == BLUE && clickedCell.canClick(false)) {
+                            validMoveFound = true;
+                            clickedCell.increaseDot();
+                            mHandler.post(() -> {
+                                imageButtons[rowIndex][colIndex].setImageResource(clickedCell.getImage());
+                            });
+
+                            if (clickedCell.shouldSpread()) {
+                                handler.postDelayed(() -> {
+                                    spreadCell(clickedCell);
+                                }, DELAY_TIME);
+                            }
+                        }
+                    }
+                } while (!validMoveFound);
+            }
+
+            redTurn = !redTurn;
+        });
+
     }
+
 
 
 }

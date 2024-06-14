@@ -115,9 +115,9 @@ public class AlphaBetaApplier {
 
         int emptyPercent = (100 * emptyCount) / (N * N);
 
-        if (emptyPercent > 70) return N / 2;
-        if (emptyPercent > 50) return N + 1;
-        if (emptyPercent > 30) return (N * N) / 2;
+        if (emptyPercent > 70) return N / 6;
+        if (emptyPercent > 50) return N / 3;
+        if (emptyPercent > 30) return (N * N) / 4;
         return N * N;
     }
 
