@@ -1,4 +1,5 @@
 package com.example.colorwars;
+
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -14,6 +15,7 @@ import android.widget.Toast;
 
 import android.os.Handler;
 
+import com.example.colorwars.classes.AlphaBetaApplier;
 import com.example.colorwars.classes.CellStatus;
 
 import java.util.LinkedList;
@@ -21,6 +23,8 @@ import java.util.Queue;
 import java.util.Random;
 
 import static com.example.colorwars.classes.CellStatus.COLOR.*;
+
+import kotlin.Pair;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -37,6 +41,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView rd, be;
     int redCount = 0, blueCount = 0;
     private final Random random = new Random();
+    private AlphaBetaApplier alphaBetaApplier;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +52,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
         rd = findViewById(R.id.redid);
         be = findViewById(R.id.blueid);
+        alphaBetaApplier = AlphaBetaApplier.getInstance();
         for (int row = 0; row < MAX_ROWS; row++) {
             for (int col = 0; col < MAX_COLUMNS; col++) {
                 String buttonId = "id" + (row + 1) + (col + 1);
@@ -246,18 +252,44 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             // Subsequent moves: Select only blue cells
             boolean validMoveFound = false;
             do {
-                rowIndex = random.nextInt(MAX_ROWS);
-                colIndex = random.nextInt(MAX_COLUMNS);
-                CellStatus clickedCell = cellStates[rowIndex][colIndex];
-                if (clickedCell.getColor() == BLUE && clickedCell.canClick(false)) {
-                    validMoveFound = true;
-                    clickedCell.increaseDot();
-                    imageButtons[rowIndex][colIndex].setImageResource(clickedCell.getImage());
+                CellStatus[][] field = new CellStatus[MAX_ROWS][MAX_COLUMNS];
+                for (int i = 0; i < MAX_ROWS; i++) {
+                    for (int j = 0; j < MAX_COLUMNS; j++) {
+                        field[i][j] = cellStates[i][j];
+                    }
+                }
+                Pair<Integer, Integer> bestMove = alphaBetaApplier.getBestMove(field, true);
+                if (bestMove != null) {
+                    rowIndex = bestMove.getFirst();
+                    colIndex = bestMove.getSecond();
+                    CellStatus clickedCell = cellStates[rowIndex][colIndex];
+                    if (clickedCell.getColor() == BLUE && clickedCell.canClick(false)) {
+                        validMoveFound = true;
+                        clickedCell.increaseDot();
+                        imageButtons[rowIndex][colIndex].setImageResource(clickedCell.getImage());
 
-                    if (clickedCell.shouldSpread()) {
-                        handler.postDelayed(() -> {
-                            spreadCell(clickedCell);
-                        }, DELAY_TIME);
+                        if (clickedCell.shouldSpread()) {
+                            handler.postDelayed(() -> {
+                                spreadCell(clickedCell);
+                            }, DELAY_TIME);
+                        }
+                    }
+                } else {
+                    Toast.makeText(this, "Random", Toast.LENGTH_SHORT).show();
+                    rowIndex = random.nextInt(MAX_ROWS);
+                    colIndex = random.nextInt(MAX_COLUMNS);
+
+                    CellStatus clickedCell = cellStates[rowIndex][colIndex];
+                    if (clickedCell.getColor() == BLUE && clickedCell.canClick(false)) {
+                        validMoveFound = true;
+                        clickedCell.increaseDot();
+                        imageButtons[rowIndex][colIndex].setImageResource(clickedCell.getImage());
+
+                        if (clickedCell.shouldSpread()) {
+                            handler.postDelayed(() -> {
+                                spreadCell(clickedCell);
+                            }, DELAY_TIME);
+                        }
                     }
                 }
             } while (!validMoveFound);
@@ -265,7 +297,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         redTurn = !redTurn;
     }
-
 
 
 }

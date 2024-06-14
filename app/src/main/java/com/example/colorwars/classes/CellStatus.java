@@ -55,4 +55,12 @@ public class CellStatus {
     }
 
     public enum COLOR{ RED, BLUE, NONE }
+    // Add these methods to manage dot count
+    public void setDotCount(int dotCount) {
+        this.dotCount = dotCount;
+    }
+
+    public int getDotCount() {
+        return dotCount;
+    }
 }
