@@ -1,5 +1,7 @@
 package com.example.colorwars.classes;
 
+import androidx.annotation.NonNull;
+
 import com.example.colorwars.R;
 
 public class CellStatus {
@@ -62,5 +64,11 @@ public class CellStatus {
 
     public int getDotCount() {
         return dotCount;
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return color.name();
     }
 }

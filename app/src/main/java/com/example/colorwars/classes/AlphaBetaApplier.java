@@ -33,7 +33,7 @@ public class AlphaBetaApplier {
     private final AtomicInteger botProgressInt = new AtomicInteger(0);
     public Pair<Integer, Integer> getBestMove(CellStatus[][] field, boolean maximizingPlayer) {
         N = field.length;
-        DEPTH_LIMIT = 0;//
+        DEPTH_LIMIT = 3;
 
         AtomicReference<Pair<Integer, Integer>> cellToPlace = new AtomicReference<>(null);
         AtomicInteger bestVal = new AtomicInteger(Integer.MIN_VALUE);
@@ -81,7 +81,7 @@ public class AlphaBetaApplier {
         }
 
         int score = 0;
-        final int[] weights = new int[]{0,1,5,15};
+        final int[] weights = new int[]{0,10,5,2};
         for(int i=0; i<blueDotCount.length; i++){
             score += (blueDotCount[i] - redDotCount[i]) * weights[i];
         }
@@ -148,7 +148,7 @@ public class AlphaBetaApplier {
         return newField;
     }
 
-    private CellStatus[][] spreadCell(CellStatus[][] cellStates, CellStatus rootCell) {
+    private void spreadCell(CellStatus[][] cellStates, CellStatus rootCell) {
         final int[][] offsets = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
         final Queue<CellStatus> cellsToSpreadQueue = new LinkedList<>();
 
@@ -174,8 +174,8 @@ public class AlphaBetaApplier {
                     cellsToSpreadQueue.offer(adjCell);
                 }
             }
+            currentCell.makeBlankAndGetImage();
         }
-        return cellStates;
     }
 
 }
