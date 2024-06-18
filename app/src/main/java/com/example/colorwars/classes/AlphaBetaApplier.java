@@ -1,5 +1,12 @@
 package com.example.colorwars.classes;
 
+import static com.example.colorwars.MainActivity.MAX_COLUMNS;
+import static com.example.colorwars.MainActivity.MAX_ROWS;
+import static com.example.colorwars.classes.CellStatus.COLOR.BLUE;
+import static com.example.colorwars.classes.CellStatus.COLOR.RED;
+
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -17,108 +24,116 @@ public class AlphaBetaApplier {
             instance = new AlphaBetaApplier();
         }
         instance.botProgressInt.set(0);
-        instance.stoppedByTLE = false;
         return instance;
     }
 
     private AlphaBetaApplier() {
     }
 
-    private boolean stoppedByTLE = false;
-    private AtomicInteger botProgressInt = new AtomicInteger(0);
-
+    private final AtomicInteger botProgressInt = new AtomicInteger(0);
     public Pair<Integer, Integer> getBestMove(CellStatus[][] field, boolean maximizingPlayer) {
         N = field.length;
-        DEPTH_LIMIT = predictDepthLimit(field);
+        DEPTH_LIMIT = 0;//
 
         AtomicReference<Pair<Integer, Integer>> cellToPlace = new AtomicReference<>(null);
         AtomicInteger bestVal = new AtomicInteger(Integer.MIN_VALUE);
 
         for (int x = 0; x < N; x++) {
             for (int y = 0; y < N; y++) {
-                if (field[x][y].getColor() == CellStatus.COLOR.NONE) {
-                    // Simulate placing the move
-                    CellStatus[][] newField = copyField(field);
-                    newField[x][y].setColor(CellStatus.COLOR.BLUE);
-                    newField[x][y].increaseDot();
-                    int moveVal = applyAlphaBeta(newField, 0, !maximizingPlayer, Integer.MIN_VALUE, Integer.MAX_VALUE);
-                    if (stoppedByTLE) return null;
+                if (field[x][y].getColor() != BLUE) continue;
 
-                    if (moveVal > bestVal.get()) {
-                        cellToPlace.set(new Pair<>(x, y));
-                        bestVal.set(moveVal);
-                    } else if (moveVal == bestVal.get() && cellToPlace.get() != null) {
-                        final Pair<Integer, Integer> prev = cellToPlace.get();
+                // Simulate placing the move
+                CellStatus[][] newField = copyField(field);
+                newField[x][y].increaseDot();
 
-                        int prevVal = prev.getFirst() * N + prev.getSecond();
-                        int curVal = x * N + y;
-
-                        if (curVal < prevVal) {
-                            cellToPlace.set(new Pair<>(x, y));
-                        }
-                    }
-
-                    botProgressInt.incrementAndGet();
+                if(newField[x][y].shouldSpread()){
+                    spreadCell(newField, newField[x][y]); // alert newField is modified inside the function
                 }
+
+                int moveVal = applyAlphaBeta(newField, 0, !maximizingPlayer, Integer.MIN_VALUE, Integer.MAX_VALUE);
+
+                if (moveVal > bestVal.get()) {
+                    cellToPlace.set(new Pair<>(x, y));
+                    bestVal.set(moveVal);
+                }
+
+                botProgressInt.incrementAndGet();
             }
         }
         return cellToPlace.get();
     }
 
+    private int evaluateBoard(CellStatus[][] field){
+        final int[] blueDotCount = new int[4]; // x, 1,2,3,
+        final int[] redDotCount = new int[4]; // x, 1,2,3,
+
+        for(int i=0; i<N; i++){
+            for(int j=0; j<N; j++){
+
+                final CellStatus cell = field[i][j];
+                if(cell.getColor() == RED){
+                    redDotCount[cell.getDotCount()]++;
+                }
+                if(cell.getColor() == BLUE){
+                    blueDotCount[cell.getDotCount()]++;
+                }
+            }
+        }
+
+        int score = 0;
+        final int[] weights = new int[]{0,1,5,15};
+        for(int i=0; i<blueDotCount.length; i++){
+            score += (blueDotCount[i] - redDotCount[i]) * weights[i];
+        }
+        return score;
+    }
+
     private int applyAlphaBeta(CellStatus[][] field, int depth, boolean maximizingPlayer, int alpha, int beta) {
-        if (depth == DEPTH_LIMIT) {
-            return 0;
+        if (depth >= DEPTH_LIMIT) {
+            return evaluateBoard(field);
         }
 
         if (maximizingPlayer) {
             int maxEval = Integer.MIN_VALUE;
+
+            mainLoop:
             for (int i = 0; i < N; i++) {
                 for (int j = 0; j < N; j++) {
-                    if (field[i][j].getColor() == CellStatus.COLOR.NONE) {
-                        CellStatus[][] newField = copyField(field);
-                        newField[i][j].setColor(CellStatus.COLOR.BLUE);
-                        newField[i][j].increaseDot();
-                        int eval = applyAlphaBeta(newField, depth + 1, false, alpha, beta);
-                        maxEval = Math.max(maxEval, eval);
-                        alpha = Math.max(alpha, eval);
-                        if (beta <= alpha) break;
-                    }
+                    if (field[i][j].getColor() != CellStatus.COLOR.BLUE) continue;
+
+                    // Only click on blue cell
+                    final CellStatus[][] newField = copyField(field);
+                    newField[i][j].increaseDot();
+                    spreadCell(newField,newField[i][j]);
+
+                    int eval = applyAlphaBeta(newField, depth + 1, false, alpha, beta);
+                    maxEval = Math.max(maxEval, eval);
+                    alpha = Math.max(alpha, eval);
+                    if (beta <= alpha) break mainLoop;
                 }
             }
             return maxEval;
-        } else {
+        }
+        else {
             int minEval = Integer.MAX_VALUE;
+            mainLoop:
             for (int i = 0; i < N; i++) {
                 for (int j = 0; j < N; j++) {
-                    if (field[i][j].getColor() == CellStatus.COLOR.NONE) {
-                        CellStatus[][] newField = copyField(field);
-                        newField[i][j].setColor(CellStatus.COLOR.RED);
-                        newField[i][j].increaseDot();
-                        int eval = applyAlphaBeta(newField, depth + 1, true, alpha, beta);
-                        minEval = Math.min(minEval, eval);
-                        beta = Math.min(beta, eval);
-                        if (beta <= alpha) break;
-                    }
+                    if (field[i][j].getColor() != RED) continue;
+
+                    // Only click on red cells
+                    final CellStatus[][] newField = copyField(field);
+                    newField[i][j].increaseDot();
+                    spreadCell(newField, newField[i][j]);
+
+                    final int eval = applyAlphaBeta(newField, depth + 1, true, alpha, beta);
+                    minEval = Math.min(minEval, eval);
+                    beta = Math.min(beta, eval);
+                    if (beta <= alpha) break mainLoop;
                 }
             }
             return minEval;
         }
-    }
-
-    private int predictDepthLimit(CellStatus[][] field) {
-        int emptyCount = 0;
-        for (CellStatus[] col : field) {
-            for (CellStatus item : col) {
-                if (item.getColor() == CellStatus.COLOR.NONE) emptyCount++;
-            }
-        }
-
-        int emptyPercent = (100 * emptyCount) / (N * N);
-
-        if (emptyPercent > 70) return N / 6;
-        if (emptyPercent > 50) return N / 3;
-        if (emptyPercent > 30) return (N * N) / 4;
-        return N * N;
     }
 
     private CellStatus[][] copyField(CellStatus[][] field) {
@@ -132,4 +147,35 @@ public class AlphaBetaApplier {
         }
         return newField;
     }
+
+    private CellStatus[][] spreadCell(CellStatus[][] cellStates, CellStatus rootCell) {
+        final int[][] offsets = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+        final Queue<CellStatus> cellsToSpreadQueue = new LinkedList<>();
+
+        cellsToSpreadQueue.add(rootCell);
+        final CellStatus.COLOR rootColor = rootCell.getColor();
+
+        while (!cellsToSpreadQueue.isEmpty()) {
+            final CellStatus currentCell = cellsToSpreadQueue.poll();
+            if (currentCell == null) continue;
+
+            for (int[] offset : offsets) {
+                int row = currentCell.rowIndex + offset[0];
+                int col = currentCell.colIndex + offset[1];
+
+                if (row < 0 || row >= MAX_ROWS || col < 0 || col >= MAX_COLUMNS) continue;
+
+                final CellStatus adjCell = cellStates[row][col];
+
+                adjCell.setColor(rootColor);
+                adjCell.increaseDot();
+
+                if (adjCell.shouldSpread()) {
+                    cellsToSpreadQueue.offer(adjCell);
+                }
+            }
+        }
+        return cellStates;
+    }
+
 }
