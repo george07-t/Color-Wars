@@ -52,7 +52,7 @@ public class AlphaBetaApplier {
 
                 int moveVal = applyAlphaBeta(newField, 0, !maximizingPlayer, Integer.MIN_VALUE, Integer.MAX_VALUE);
 
-                if (moveVal > bestVal.get()) {
+                if (moveVal >= bestVal.get()) {
                     cellToPlace.set(new Pair<>(x, y));
                     bestVal.set(moveVal);
                 }
