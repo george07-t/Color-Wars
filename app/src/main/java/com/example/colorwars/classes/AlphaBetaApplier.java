@@ -33,7 +33,7 @@ public class AlphaBetaApplier {
     private final AtomicInteger botProgressInt = new AtomicInteger(0);
     public Pair<Integer, Integer> getBestMove(CellStatus[][] field, boolean maximizingPlayer) {
         N = field.length;
-        DEPTH_LIMIT = 3;
+        DEPTH_LIMIT = 2;
 
         AtomicReference<Pair<Integer, Integer>> cellToPlace = new AtomicReference<>(null);
         AtomicInteger bestVal = new AtomicInteger(Integer.MIN_VALUE);
@@ -51,6 +51,7 @@ public class AlphaBetaApplier {
                 }
 
                 int moveVal = applyAlphaBeta(newField, 0, !maximizingPlayer, Integer.MIN_VALUE, Integer.MAX_VALUE);
+                System.gc();
 
                 if (moveVal >= bestVal.get()) {
                     cellToPlace.set(new Pair<>(x, y));

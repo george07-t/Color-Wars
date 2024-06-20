@@ -240,7 +240,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private final ExecutorService service = Executors.newSingleThreadExecutor();
     private final Handler mHandler = new Handler(Looper.getMainLooper());
     private void botMove() {
-        //service.submit(() -> {
+        service.submit(() -> {
             if (isGameOver) return;
 
             if (initialPhaseBlue) { // First move: Select any non-red cell
@@ -307,7 +307,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
 
             redTurn = !redTurn;
-        //});
+        });
 
     }
 }
