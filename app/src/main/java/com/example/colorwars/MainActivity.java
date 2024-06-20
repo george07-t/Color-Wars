@@ -250,9 +250,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     colIndex[0] = random.nextInt(MAX_COLUMNS);
                 } while (cellStates[rowIndex[0]][colIndex[0]].getColor() == RED);
 
-                rowIndex[0] = 2; // remove
-                colIndex[0] = 2; // remove
-
                 CellStatus clickedCell = cellStates[rowIndex[0]][colIndex[0]];
                 clickedCell.setColor(BLUE);
                 clickedCell.increaseDot();
