@@ -111,7 +111,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         if (clickedCell.shouldSpread()) {
             mHandler.postDelayed(() -> {
-                spreadCell(clickedCell);
+                if(clickedCell.shouldSpread()) {
+                    spreadCell(clickedCell);
+                }
                 redTurn = !redTurn;
                 if (!redTurn) {
                     mHandler.postDelayed(this::botMove, DELAY_TIME);
@@ -283,7 +285,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                         if (clickedCell.shouldSpread()) {
                             mHandler.postDelayed(() -> {
-                                spreadCell(clickedCell);
+                                if(clickedCell.shouldSpread()) {
+                                    spreadCell(clickedCell);
+                                }
                             }, DELAY_TIME);
                         }
                     }

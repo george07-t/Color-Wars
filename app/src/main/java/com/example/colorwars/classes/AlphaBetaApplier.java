@@ -105,7 +105,9 @@ public class AlphaBetaApplier {
                     // Only click on blue cell
                     final CellStatus[][] newField = copyField(field);
                     newField[i][j].increaseDot();
-                    spreadCell(newField,newField[i][j]);
+                    if(newField[i][j].shouldSpread()) {
+                        spreadCell(newField, newField[i][j]);
+                    }
 
                     int eval = applyAlphaBeta(newField, depth + 1, false, alpha, beta);
                     maxEval = Math.max(maxEval, eval);
@@ -125,7 +127,9 @@ public class AlphaBetaApplier {
                     // Only click on red cells
                     final CellStatus[][] newField = copyField(field);
                     newField[i][j].increaseDot();
-                    spreadCell(newField, newField[i][j]);
+                    if(newField[i][j].shouldSpread()) {
+                        spreadCell(newField, newField[i][j]);
+                    }
 
                     final int eval = applyAlphaBeta(newField, depth + 1, true, alpha, beta);
                     minEval = Math.min(minEval, eval);
