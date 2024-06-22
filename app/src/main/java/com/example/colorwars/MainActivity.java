@@ -5,6 +5,8 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.annotation.SuppressLint;
 import android.content.DialogInterface;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Looper;
 import android.view.View;
@@ -17,6 +19,7 @@ import android.os.Handler;
 
 import com.example.colorwars.classes.AlphaBetaApplier;
 import com.example.colorwars.classes.CellStatus;
+import com.google.android.material.switchmaterial.SwitchMaterial;
 
 import java.util.LinkedList;
 import java.util.Queue;
@@ -44,6 +47,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     int redCount = 0, blueCount = 0;
     private final Random random = new Random();
     private AlphaBetaApplier alphaBetaApplier;
+    private SwitchMaterial switchMaterial;
+    boolean switchbot = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,9 +56,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Window window = this.getWindow();
         window.setStatusBarColor(this.getResources().getColor(R.color.main));
         setContentView(R.layout.activity_main);
-        setContentView(R.layout.activity_main);
         rd = findViewById(R.id.redid);
         be = findViewById(R.id.blueid);
+        switchMaterial = findViewById(R.id.switchBot);
+        updateSwitchColors(switchMaterial, false);
+        switchMaterial.setOnCheckedChangeListener((buttonView, isChecked) -> {
+
+            if (initialPhaseBlue) {
+                updateSwitchColors(switchMaterial, isChecked);
+                switchbot = !switchbot;
+                if (switchbot) {
+                    Toast.makeText(this, "Hard Bot", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(this, "Easy Bot", Toast.LENGTH_SHORT).show();
+                }
+            } // Toggle switchbot state
+            else {
+                Toast.makeText(this, "Can't switch in a running Game", Toast.LENGTH_SHORT).show();
+                switchMaterial.setChecked(!isChecked);
+            }
+
+        });
         alphaBetaApplier = AlphaBetaApplier.getInstance();
         for (int row = 0; row < MAX_ROWS; row++) {
             for (int col = 0; col < MAX_COLUMNS; col++) {
@@ -64,6 +87,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 imageButtons[row][col].setOnClickListener(this);
                 cellStates[row][col] = new CellStatus(row, col); // initialize with blank cell
             }
+        }
+    }
+
+    private void updateSwitchColors(SwitchMaterial switchMaterial, boolean isChecked) {
+        if (isChecked) {
+            // Checked - Set to yellow
+            switchMaterial.setThumbTintList(ColorStateList.valueOf(Color.YELLOW));
+            switchMaterial.setTrackTintList(ColorStateList.valueOf(Color.parseColor("#FFFACD")));  // Light Yellow
+        } else {
+            // Not Checked - Set to green
+            switchMaterial.setThumbTintList(ColorStateList.valueOf(Color.GREEN));
+            switchMaterial.setTrackTintList(ColorStateList.valueOf(Color.WHITE));
         }
     }
 
@@ -111,7 +146,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         if (clickedCell.shouldSpread()) {
             mHandler.postDelayed(() -> {
-                if(clickedCell.shouldSpread()) {
+                if (clickedCell.shouldSpread()) {
                     spreadCell(clickedCell);
                 }
                 redTurn = !redTurn;
@@ -119,8 +154,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     mHandler.postDelayed(this::botMove, DELAY_TIME);
                 }
             }, DELAY_TIME);
-        }
-        else{
+        } else {
             redTurn = !redTurn;
             if (!redTurn) {
                 mHandler.postDelayed(this::botMove, DELAY_TIME);
@@ -241,6 +275,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private final ExecutorService service = Executors.newSingleThreadExecutor();
     private final Handler mHandler = new Handler(Looper.getMainLooper());
+
     private void botMove() {
         service.submit(() -> {
             if (isGameOver) return;
@@ -261,14 +296,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     imageButtons[rowIndex[0]][colIndex[0]].setImageResource(clickedCell.getImage());
                 });
                 initialPhaseBlue = false;
-            }
-            else {// Subsequent moves: Select only blue cells
+            } else {// Subsequent moves: Select only blue cells
                 final CellStatus[][] field = new CellStatus[MAX_ROWS][MAX_COLUMNS];
                 for (int i = 0; i < MAX_ROWS; i++) {
                     System.arraycopy(cellStates[i], 0, field[i], 0, MAX_COLUMNS);
                 }
-
-                final Pair<Integer, Integer> bestMove = alphaBetaApplier.getBestMove(field, true);
+                final Pair<Integer, Integer> bestMove;
+                if (!switchbot) {
+                    bestMove = alphaBetaApplier.getBestMove(field, true);
+                } else {
+                    mHandler.post(() -> Toast.makeText(this, "On Going of GA", Toast.LENGTH_SHORT).show());
+                    return; // Early exit if no other action should be taken
+                }
 
                 if (bestMove != null) {
                     final int rowIndex = bestMove.getFirst();
@@ -285,14 +324,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                         if (clickedCell.shouldSpread()) {
                             mHandler.postDelayed(() -> {
-                                if(clickedCell.shouldSpread()) {
+                                if (clickedCell.shouldSpread()) {
                                     spreadCell(clickedCell);
                                 }
                             }, DELAY_TIME);
                         }
                     }
-                }
-                else {
+                } else {
                     Toast.makeText(this, "Random", Toast.LENGTH_SHORT).show();
                     final int rowIndex = random.nextInt(MAX_ROWS);
                     final int colIndex = random.nextInt(MAX_COLUMNS);
@@ -304,7 +342,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             imageButtons[rowIndex][colIndex].setImageResource(clickedCell.getImage());
                         });
 
-                        if (clickedCell.shouldSpread()) { mHandler.postDelayed(() -> spreadCell(clickedCell), DELAY_TIME); }
+                        if (clickedCell.shouldSpread()) {
+                            mHandler.postDelayed(() -> spreadCell(clickedCell), DELAY_TIME);
+                        }
                     }
                 }
 
