@@ -5,8 +5,10 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.annotation.SuppressLint;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Looper;
 import android.view.View;
@@ -19,9 +21,11 @@ import android.os.Handler;
 
 import com.example.colorwars.classes.AlphaBetaApplier;
 import com.example.colorwars.classes.CellStatus;
-import com.google.android.material.switchmaterial.SwitchMaterial;
+import com.example.colorwars.classes.FuzzyLogicApplier;
+import com.example.colorwars.classes.GeneticApplier;
 
 import java.util.LinkedList;
+import java.util.Objects;
 import java.util.Queue;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
@@ -47,8 +51,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     int redCount = 0, blueCount = 0;
     private final Random random = new Random();
     private AlphaBetaApplier alphaBetaApplier;
-    private SwitchMaterial switchMaterial;
-    boolean switchbot = false;
+    private FuzzyLogicApplier fuzzyLogicApplier;
+    private GeneticApplier geneticApplier;
+    int whichbot = 0;
+    private TextView algo;
+    MediaPlayer mediaPlayer,botmediaplayer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,28 +63,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Window window = this.getWindow();
         window.setStatusBarColor(this.getResources().getColor(R.color.main));
         setContentView(R.layout.activity_main);
+        algo = findViewById(R.id.algo);
+        Intent intent = getIntent();
+        String value = intent.getStringExtra("key");
+        if (Objects.equals(value, "easy")) {
+            whichbot = 1;
+            algo.setText("Easy (Fuzzy)");
+        } else if (Objects.equals(value, "medium")) {
+            whichbot = 2;
+            algo.setText("Medium (GA)");
+        } else if (Objects.equals(value, "hard")) {
+            whichbot = 3;
+            algo.setText("Hard (AB)");
+        }
         rd = findViewById(R.id.redid);
         be = findViewById(R.id.blueid);
-        switchMaterial = findViewById(R.id.switchBot);
-        updateSwitchColors(switchMaterial, false);
-        switchMaterial.setOnCheckedChangeListener((buttonView, isChecked) -> {
-
-            if (initialPhaseBlue) {
-                updateSwitchColors(switchMaterial, isChecked);
-                switchbot = !switchbot;
-                if (switchbot) {
-                    Toast.makeText(this, "Hard Bot", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(this, "Easy Bot", Toast.LENGTH_SHORT).show();
-                }
-            } // Toggle switchbot state
-            else {
-                Toast.makeText(this, "Can't switch in a running Game", Toast.LENGTH_SHORT).show();
-                switchMaterial.setChecked(!isChecked);
-            }
-
-        });
+        mediaPlayer = MediaPlayer.create(this, R.raw.cellsound);
+        botmediaplayer=MediaPlayer.create(this,R.raw.botcellsound);
         alphaBetaApplier = AlphaBetaApplier.getInstance();
+        fuzzyLogicApplier = FuzzyLogicApplier.getInstance();
+        geneticApplier = GeneticApplier.getInstance();
         for (int row = 0; row < MAX_ROWS; row++) {
             for (int col = 0; col < MAX_COLUMNS; col++) {
                 String buttonId = "id" + (row + 1) + (col + 1);
@@ -90,21 +95,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    private void updateSwitchColors(SwitchMaterial switchMaterial, boolean isChecked) {
-        if (isChecked) {
-            // Checked - Set to yellow
-            switchMaterial.setThumbTintList(ColorStateList.valueOf(Color.YELLOW));
-            switchMaterial.setTrackTintList(ColorStateList.valueOf(Color.parseColor("#FFFACD")));  // Light Yellow
-        } else {
-            // Not Checked - Set to green
-            switchMaterial.setThumbTintList(ColorStateList.valueOf(Color.GREEN));
-            switchMaterial.setTrackTintList(ColorStateList.valueOf(Color.WHITE));
+    private void setButtonsEnabled(boolean enabled) {
+        for (int row = 0; row < MAX_ROWS; row++) {
+            for (int col = 0; col < MAX_COLUMNS; col++) {
+                imageButtons[row][col].setEnabled(enabled);
+            }
         }
     }
 
-    @Override
     public void onClick(View view) {
         if (isGameOver) return;
+
         // Get the row and column indices of the clicked ImageButton
         int[] indices = findButtonIndices(view);
         int rowIndex = indices[0];
@@ -140,9 +141,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             showToast("Invalid move");
             return;
         }
-
+        if (mediaPlayer != null) {
+            mediaPlayer.start();
+        }
         clickedCell.increaseDot();
         imageButtons[rowIndex][colIndex].setImageResource(clickedCell.getImage());
+
+        setButtonsEnabled(false);
 
         if (clickedCell.shouldSpread()) {
             mHandler.postDelayed(() -> {
@@ -151,16 +156,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
                 redTurn = !redTurn;
                 if (!redTurn) {
-                    mHandler.postDelayed(this::botMove, DELAY_TIME);
+                    mHandler.postDelayed(this::botMoveAndEnableButtons, DELAY_TIME);
+                } else {
+                    setButtonsEnabled(true);
                 }
             }, DELAY_TIME);
         } else {
             redTurn = !redTurn;
             if (!redTurn) {
-                mHandler.postDelayed(this::botMove, DELAY_TIME);
+                mHandler.postDelayed(this::botMoveAndEnableButtons, DELAY_TIME);
+            } else {
+                setButtonsEnabled(true);
             }
         }
     }
+
+    private void botMoveAndEnableButtons() {
+        botMove();
+        setButtonsEnabled(true);
+    }
+
 
     private int[] findButtonIndices(View view) {
         for (int r = 0; r < MAX_ROWS; r++) {
@@ -276,6 +291,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private final ExecutorService service = Executors.newSingleThreadExecutor();
     private final Handler mHandler = new Handler(Looper.getMainLooper());
 
+    private boolean hasRedNeighbor(int row, int col, CellStatus[][] cellStates) {
+        int[] rowOffsets = {-1, 0, 1, 0}; // Up, Right, Down, Left
+        int[] colOffsets = {0, 1, 0, -1}; // Up, Right, Down, Left
+
+        for (int i = 0; i < 4; i++) {
+            int newRow = row + rowOffsets[i];
+            int newCol = col + colOffsets[i];
+
+            if (newRow >= 0 && newRow < cellStates.length && newCol >= 0 && newCol < cellStates[0].length) {
+                if (cellStates[newRow][newCol].getColor() == RED) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     private void botMove() {
         service.submit(() -> {
             if (isGameOver) return;
@@ -285,7 +317,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 do {
                     rowIndex[0] = random.nextInt(MAX_ROWS);
                     colIndex[0] = random.nextInt(MAX_COLUMNS);
-                } while (cellStates[rowIndex[0]][colIndex[0]].getColor() == RED);
+
+                } while (cellStates[rowIndex[0]][colIndex[0]].getColor() == RED || hasRedNeighbor(rowIndex[0], colIndex[0], cellStates));
 
                 CellStatus clickedCell = cellStates[rowIndex[0]][colIndex[0]];
                 clickedCell.setColor(BLUE);
@@ -294,6 +327,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 mHandler.post(() -> {
                     be.setText(String.valueOf(blueCount));
                     imageButtons[rowIndex[0]][colIndex[0]].setImageResource(clickedCell.getImage());
+                    botmediaplayer.start();
                 });
                 initialPhaseBlue = false;
             } else {// Subsequent moves: Select only blue cells
@@ -302,11 +336,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     System.arraycopy(cellStates[i], 0, field[i], 0, MAX_COLUMNS);
                 }
                 final Pair<Integer, Integer> bestMove;
-                if (!switchbot) {
-                    bestMove = alphaBetaApplier.getBestMove(field, true);
+                if (whichbot == 1) {
+
+                    bestMove = fuzzyLogicApplier.getBestMove(field);
+
+                } else if (whichbot == 2) {
+                    bestMove = geneticApplier.predict(field.length, field);
                 } else {
-                    mHandler.post(() -> Toast.makeText(this, "On Going of GA", Toast.LENGTH_SHORT).show());
-                    return; // Early exit if no other action should be taken
+                    bestMove = alphaBetaApplier.getBestMove(field, true);
                 }
 
                 if (bestMove != null) {
@@ -320,6 +357,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                         mHandler.post(() -> {
                             imageButtons[rowIndex][colIndex].setImageResource(clickedCell.getImage());
+                            botmediaplayer.start();
                         });
 
                         if (clickedCell.shouldSpread()) {
@@ -353,5 +391,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             redTurn = !redTurn;
         });
 
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (!isGameOver) {
+            // Create an alert dialog
+            new AlertDialog.Builder(this)
+                    .setTitle("Exit")
+                    .setMessage("Are you sure you want to exit the game?")
+                    .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            // Exit the activity
+                            MainActivity.super.onBackPressed();
+                        }
+                    })
+                    .setNegativeButton(android.R.string.no, null)
+                    .show();
+        }
     }
 }
