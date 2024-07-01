@@ -11,8 +11,10 @@ import android.graphics.Color;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Looper;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -55,7 +57,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private GeneticApplier geneticApplier;
     int whichbot = 0;
     private TextView algo;
-    MediaPlayer mediaPlayer,botmediaplayer;
+    MediaPlayer mediaPlayer, botmediaplayer, win, loose;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,8 +80,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         rd = findViewById(R.id.redid);
         be = findViewById(R.id.blueid);
-        mediaPlayer = MediaPlayer.create(this, R.raw.cellsound);
-        botmediaplayer=MediaPlayer.create(this,R.raw.botcellsound);
+        mediaPlayer = MediaPlayer.create(this, R.raw.popcell);
+        botmediaplayer = MediaPlayer.create(this, R.raw.botpop);
+        win = MediaPlayer.create(this, R.raw.win);
+        loose = MediaPlayer.create(this, R.raw.loose);
         alphaBetaApplier = AlphaBetaApplier.getInstance();
         fuzzyLogicApplier = FuzzyLogicApplier.getInstance();
         geneticApplier = GeneticApplier.getInstance();
@@ -258,11 +262,31 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void showWinnerDialog(String winner) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Game Over");
-        builder.setMessage(winner + " Wins!");
-        builder.setPositiveButton("Restart", new DialogInterface.OnClickListener() {
+        LayoutInflater inflater = this.getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.dialog_winner, null);
+        builder.setView(dialogView);
+
+        TextView tvTitle = dialogView.findViewById(R.id.tvTitle);
+        TextView tvMessage = dialogView.findViewById(R.id.tvMessage);
+        Button btnPrimary = dialogView.findViewById(R.id.btnPrimary);
+        Button btnSecondary = dialogView.findViewById(R.id.btnSecondary);
+
+        tvTitle.setText("Game Over");
+        tvMessage.setText(winner + " Wins!");
+
+        if (Objects.equals(winner, "RED")) {
+            win.start();
+        } else {
+            loose.start();
+        }
+
+        AlertDialog alertDialog = builder.create();
+        alertDialog.setCancelable(false);
+
+        btnPrimary.setText("Restart");
+        btnPrimary.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(DialogInterface dialog, int which) {
+            public void onClick(View v) {
                 isGameOver = false;
                 initialPhaseBlue = true;
                 initialPhaseRed = true;
@@ -276,17 +300,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         imageButtons[r][c].setImageResource(cellStates[r][c].makeBlankAndGetImage());
                     }
                 }
-                dialog.dismiss();
+                alertDialog.dismiss();
             }
         });
 
-        builder.setNegativeButton("Quit", (dialog, which) -> {
-            dialog.dismiss();
-
+        btnSecondary.setText("Quit");
+        btnSecondary.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                alertDialog.dismiss();
+            }
         });
-        builder.setCancelable(false);
-        builder.show();
+
+        alertDialog.show();
     }
+
 
     private final ExecutorService service = Executors.newSingleThreadExecutor();
     private final Handler mHandler = new Handler(Looper.getMainLooper());
@@ -396,18 +424,40 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onBackPressed() {
         if (!isGameOver) {
-            // Create an alert dialog
-            new AlertDialog.Builder(this)
-                    .setTitle("Exit")
-                    .setMessage("Are you sure you want to exit the game?")
-                    .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int which) {
-                            // Exit the activity
-                            MainActivity.super.onBackPressed();
-                        }
-                    })
-                    .setNegativeButton(android.R.string.no, null)
-                    .show();
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            LayoutInflater inflater = this.getLayoutInflater();
+            View dialogView = inflater.inflate(R.layout.dialog_winner, null);
+            builder.setView(dialogView);
+
+            TextView tvTitle = dialogView.findViewById(R.id.tvTitle);
+            TextView tvMessage = dialogView.findViewById(R.id.tvMessage);
+            Button btnPrimary = dialogView.findViewById(R.id.btnPrimary);
+            Button btnSecondary = dialogView.findViewById(R.id.btnSecondary);
+
+            tvTitle.setText("Exit");
+            tvMessage.setText("Are you sure you want to exit the game?");
+
+            AlertDialog alertDialog = builder.create();
+            alertDialog.setCancelable(false);
+
+            btnPrimary.setText("Yes");
+            btnPrimary.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    MainActivity.super.onBackPressed();
+                }
+            });
+
+            btnSecondary.setText("No");
+            btnSecondary.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    alertDialog.dismiss();
+                }
+            });
+
+            alertDialog.show();
         }
     }
+
 }
