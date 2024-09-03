@@ -19,6 +19,8 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.example.colorwars.classes.MediaPlayerSingleton;
+
 public class LauncherActivity extends AppCompatActivity {
     private ImageView logo;
     private TextView t;
@@ -37,6 +39,9 @@ public class LauncherActivity extends AppCompatActivity {
         medium = findViewById(R.id.Medium);
         hard = findViewById(R.id.Hard);
         final MediaPlayer mediaPlayer=MediaPlayer.create(this,R.raw.modesound);
+        MediaPlayerSingleton back = MediaPlayerSingleton.getInstance(this);
+        back.setVolume(0.5f);
+        back.start();
         topAnim = AnimationUtils.loadAnimation(this, R.anim.top_animation);
 
         bottomAnim = AnimationUtils.loadAnimation(this, R.anim.bottom_animation);
@@ -70,6 +75,19 @@ public class LauncherActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+    }
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // Pause the music if desired
+        MediaPlayerSingleton.getInstance(this).pause();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Resume the music
+        MediaPlayerSingleton.getInstance(this).start();
     }
     @Override
     public void onBackPressed() {

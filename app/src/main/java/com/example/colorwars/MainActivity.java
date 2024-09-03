@@ -25,6 +25,7 @@ import com.example.colorwars.classes.AlphaBetaApplier;
 import com.example.colorwars.classes.CellStatus;
 import com.example.colorwars.classes.FuzzyLogicApplier;
 import com.example.colorwars.classes.GeneticApplier;
+import com.example.colorwars.classes.MediaPlayerSingleton;
 
 import java.util.LinkedList;
 import java.util.Objects;
@@ -81,7 +82,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         rd = findViewById(R.id.redid);
         be = findViewById(R.id.blueid);
         mediaPlayer = MediaPlayer.create(this, R.raw.popcell);
-        botmediaplayer = MediaPlayer.create(this, R.raw.botpop);
+        botmediaplayer = MediaPlayer.create(this, R.raw.botcell);
+        MediaPlayerSingleton mediaPlayer = MediaPlayerSingleton.getInstance(this);
+        mediaPlayer.setVolume(0.5f); // Set volume to 50%
         win = MediaPlayer.create(this, R.raw.win);
         loose = MediaPlayer.create(this, R.raw.loose);
         alphaBetaApplier = AlphaBetaApplier.getInstance();
@@ -98,7 +101,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         }
     }
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // Pause the music if desired
+        MediaPlayerSingleton.getInstance(this).pause();
+    }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Resume the music
+        MediaPlayerSingleton.getInstance(this).start();
+    }
     private void setButtonsEnabled(boolean enabled) {
         for (int row = 0; row < MAX_ROWS; row++) {
             for (int col = 0; col < MAX_COLUMNS; col++) {
@@ -457,6 +472,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             });
 
             alertDialog.show();
+        }
+        else{
+            super.onBackPressed();
         }
     }
 
