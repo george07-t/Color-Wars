@@ -89,7 +89,7 @@ Contributions are welcome! If you have improvements or bug fixes, please open an
 
 ## 📄 **License**
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE.md) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## **Support**
 If you encounter any issues while using Colors Wars or have questions, please open an issue in the GitHub repository. We'll be happy to help you out.
