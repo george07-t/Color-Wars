@@ -21,7 +21,7 @@
 4. **Spread and Conquer**: Once a circle reaches 4 dots, it spreads to adjacent squares, capturing opponent circles.
 5. **Win the Game**: Dominate the entire grid or eliminate your opponent’s circles to win.
 
-![Gameplay Screenshot]
+## **Gameplay Screenshots**
 
 <img src="https://github.com/user-attachments/assets/69af7031-ac76-48c2-be0f-083a10781425" alt="2" width="250" height="500"/>
 <br>
