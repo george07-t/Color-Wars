@@ -72,7 +72,10 @@ Optimizes decision-making by pruning irrelevant branches in the decision tree, e
 
 ## 🎥 **Demo Video**
 
-Check out the gameplay in action! [Watch the Demo](https://github.com/user-attachments/assets/e2ddc48f-91e9-4bde-a629-33467e3ea01e)
+
+https://github.com/user-attachments/assets/50aaa000-4235-4754-b46e-7ad06d992e5e
+
+
 
 
 ## 🛠️ **Installation**
